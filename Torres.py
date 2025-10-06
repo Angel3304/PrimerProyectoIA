@@ -5,7 +5,7 @@ import time
 TORRE_ORIGEN = 0
 TORRE_AUXILIAR = 1
 TORRE_DESTINO = 2
-
+CUTOFF = 'cutoff'
 
 
 def generar_sucesores(estado):
@@ -41,6 +41,72 @@ def generar_sucesores(estado):
 
 # ALGORITMO IDDFS (Busqueda en Profundidad Iterativa)
 
+def busqueda_profundidad_limitada(estado_actual, estado_objetivo, limite, camino_actual):
+    """
+    Realiza una Búsqueda en Profundidad hasta un límite de profundidad específico.
+    """
+    
+    if estado_actual == estado_objetivo:
+        return camino_actual
+        
+    if limite == 0:
+        return CUTOFF 
+
+    se_produjo_cutoff = False
+    
+    for sucesor_estado, movimiento in generar_sucesores(estado_actual):
+        
+        # Llamada recursiva con límite reducido
+        resultado = busqueda_profundidad_limitada(
+            sucesor_estado, 
+            estado_objetivo, 
+            limite - 1, 
+            camino_actual + [movimiento]
+        )
+        
+        if resultado == CUTOFF:
+            se_produjo_cutoff = True
+        elif resultado is not None:
+            return resultado
+            
+    # Propaga la señal de 'cutoff' para que la IDDFS sepa que debe aumentar el límite.
+    if se_produjo_cutoff:
+        return CUTOFF
+    else:
+        # No se encontró, ni se alcanzó el límite; rama completamente explorada.
+        return None 
+
+
+def resolver_iddfs(estado_inicial, estado_objetivo):
+    """
+    Algoritmo de Búsqueda por Profundidad Iterativa (IDDFS) con bucle infinito.
+    """
+    tiempo_inicio = time.time()
+    limite = 0
+
+    while True: # Bucle infinito: buscamos hasta encontrar la meta o agotar el espacio.
+        print(f"IDDFS: Buscando en Profundidad {limite}...", end='\r') 
+        
+        # Llama a la Búsqueda en Profundidad Limitada
+        camino = busqueda_profundidad_limitada(
+            estado_inicial, 
+            estado_objetivo, 
+            limite, 
+            []
+        )
+        
+        if camino is None:
+            # Si es None, la búsqueda en este nivel ha terminado y NO HAY SOLUCIÓN.
+            tiempo_fin = time.time()
+            return None, None, tiempo_fin - tiempo_inicio
+            
+        elif camino != CUTOFF:
+            tiempo_fin = time.time()
+            movimientos = len(camino)
+            return camino, movimientos, tiempo_fin - tiempo_inicio
+            
+        # Si el resultado es CUTOFF, ise incrementa el limite y continua
+        limite += 1 
 
 
 # Algoritmo A*
@@ -144,10 +210,12 @@ def comparador():
     resultados = {}
 
     # --- Ejecutar IDDFS ---
-    """
-    Aun falta agregar esta parte
-    """
-
+    if opcion in ['1', '3']:
+        print("\n--- Ejecutando IDDFS ---")
+        # 💥 CORRECCIÓN: Llamada sin límite, confiando en el bucle 'while True' interno
+        camino, movimientos, tiempo = resolver_iddfs(estado_inicial, estado_objetivo)
+        resultados['IDDFS'] = {'camino': camino, 'movimientos': movimientos, 'tiempo': tiempo}
+   
     # --- Ejecutar A* ---
     if opcion in ['2', '3']:
         print("\n--- Ejecutando A* ---")
@@ -155,7 +223,7 @@ def comparador():
         resultados['A*'] = {'camino': camino, 'movimientos': movimientos, 'tiempo': tiempo}
 
     # Comparacion
-    print("RESULTADOS DE LA COMPARACION")
+    print("\nRESULTADOS DE LA COMPARACION")
 
     for alg, res in resultados.items():
         print(f"\nAlgoritmo: {alg}")
