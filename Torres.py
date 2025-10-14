@@ -3,13 +3,12 @@ import time
 import sys
 
 # Se implementa un limite de recursion para problemas mas grandes como 12 discos
-sys.setrecursionlimit(20000)
+sys.setrecursionlimit(5000)
 
 # constantes
 TORRE_ORIGEN = 0
 TORRE_AUXILIAR = 1
 TORRE_DESTINO = 2
-CUTOFF = 'cutoff'
 NOMBRES_TORRES = {0: 'Origen (A)', 1: 'Auxiliar (B)', 2: 'Destino (C)'}
 
 
